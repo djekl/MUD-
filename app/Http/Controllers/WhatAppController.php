@@ -12,9 +12,7 @@ class WhatAppController extends Controller
     public function __invoke(Request $request, UserService $userService, CommandHandler $commandHandler,): string
     {
         // Check we have the info we need posted to us
-        if (!$request->has('From') || !$request->has('Body')) {
-            return response('error', 403);
-        }
+        abort_unless($request->has('From') && $request->has('Body'), 403, 'error');
 
         $user = $userService->getUserById($request->post('From'));
         $commandResponse = $commandHandler->handle($user, $request->post('Body'));
