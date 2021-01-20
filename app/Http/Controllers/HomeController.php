@@ -34,10 +34,11 @@ class HomeController extends Controller
 
     private function getUserIdFromSession(): string
     {
-        if (!Session::exists('userId')) {
-            Session::put('userId', Uuid::uuid4());
-        }
-        return Session::get('userId');
+        return Session::get('userId', function () {
+            $uuid = Uuid::uuid4();
+            Session::put('userId', $uuid);
+            return $uuid;
+        });
     }
 
     private function getToken(string $userId)
