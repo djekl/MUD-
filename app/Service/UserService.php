@@ -43,14 +43,16 @@ class UserService
     public function getAllUsers(): array
     {
         $return = [];
-        foreach (
-            $this->syncService
-                ->syncMaps(self::LIST_MAP_NAME)
-                ->syncMapItems
-                ->read([], 20) as $item
-        ) {
-            $return[] = new User($item->key, $item->data);
-        }
+        $users = $this->syncService
+            ->syncMaps(self::LIST_MAP_NAME)
+            ->syncMapItems
+            ->read([], 20);
+
+        collect($users)
+            ->each(function ($item) use (&$return) {
+                $return[] = new User($item->key, $item->data);
+            });
+
         return $return;
     }
 
@@ -59,11 +61,12 @@ class UserService
      */
     public function displayAllUsers(): array
     {
-        $users = $this->getAllUsers();
-        foreach ($users as $user) {
-            $user->userId = sha1($user->userId . config('service.twilio.token'));
-        }
-        return $users;
+        return collect($this->getAllUsers())
+            ->transform(function ($user) {
+                $user->userId = sha1($user->userId . config('service.twilio.token'));
+                return $user;
+            })
+            ->toArray();
     }
 
     public function deleteAllUsers(): void
